@@ -1,0 +1,346 @@
+<title>Kryptos στον Ήλιο</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Allerta+Stencil&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: control rail + two stacked/side-by-side views (plan + projection), readout strip below */
+:root{
+  --bg:#eef0ef; --panel:#ffffff; --fg:#1d2422; --muted:#5d6865; --line:#d3d9d7;
+  --copper:#a8582f; --verd:#2b7a6f; --sun:#f7e8c4; --shadow:#43494b; --sheet:#7c8a86;
+  --f-display:"Allerta Stencil","Stardos Stencil",ui-monospace,monospace;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121615; --panel:#1b2120; --fg:#e4e9e7; --muted:#9aa6a2; --line:#2c3533;
+  --copper:#d88a5e; --verd:#5cc0b0; --sheet:#9fb0ab; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121615; --panel:#1b2120; --fg:#e4e9e7; --muted:#9aa6a2; --line:#2c3533;
+  --copper:#d88a5e; --verd:#5cc0b0; --sheet:#9fb0ab; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.5}
+.wrap{max-width:1280px;margin:0 auto;padding-inline:16px;padding-block:20px 40px;display:grid;gap:16px}
+header h1{font-family:var(--f-display);font-weight:400;font-size:clamp(26px,4vw,40px);letter-spacing:.04em;margin:0;text-wrap:balance}
+header p{margin:.3em 0 0;color:var(--muted);max-width:70ch}
+.main{display:grid;grid-template-columns:300px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:860px){.main{grid-template-columns:minmax(0,1fr)}}
+.rail{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:14px}
+.ctl{display:grid;gap:4px}
+.ctl label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);display:flex;justify-content:space-between}
+.ctl label b{font-family:var(--f-mono);font-weight:500;color:var(--fg);letter-spacing:0;text-transform:none}
+input[type=range]{width:100%;accent-color:var(--copper)}
+select{width:100%;padding:6px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--fg);font:inherit}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+button{font:inherit;font-size:12px;padding:5px 9px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--fg);cursor:pointer}
+button:hover{border-color:var(--copper)}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid var(--copper);outline-offset:2px}
+button.primary{background:var(--copper);border-color:var(--copper);color:#fff}
+.checks{display:grid;gap:4px;font-size:13px}
+.views{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);gap:16px}
+@media (max-width:1100px){.views{grid-template-columns:minmax(0,1fr)}}
+figure{margin:0;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:10px;display:grid;gap:6px;min-width:0}
+figcaption{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+canvas{width:100%;height:auto;display:block;border-radius:3px}
+.read{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:grid;gap:10px;min-width:0}
+.read h2{font-size:13px;text-transform:uppercase;letter-spacing:.07em;margin:0;color:var(--muted);font-weight:600}
+.mono{font-family:var(--f-mono);font-size:13px;overflow-x:auto;white-space:pre;padding:6px 0}
+.kv{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 14px;font-size:13px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums;min-width:0;overflow-wrap:anywhere}
+.note{font-size:12.5px;color:var(--muted);max-width:80ch}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;border:1px solid var(--line)}
+.pill.hit{background:var(--verd);color:#fff;border-color:var(--verd)}
+.k4{color:var(--verd)} .yar{color:var(--copper)}
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Kryptos στον Ήλιο</h1>
+    <p>Το γλυπτό τρυπημένο σε φύλλο Α4, μπροστά σε παράθυρο. Ρυθμίζεις τον ήλιο, το λύγισμα του χαρτιού και πού πέφτει το φως, και βλέπεις τι σχηματίζεται. Στη λειτουργία «πάνω στο ίδιο το φύλλο» μετράει αν το φως που περνά από τα γράμματα του K4 πέφτει σε γράμματα που λειτουργούν ως κλειδί.</p>
+  </header>
+
+  <div class="main">
+    <aside class="rail" aria-label="Ρυθμίσεις">
+      <div class="ctl">
+        <label for="az">Ήλιος, αζιμούθιο <b id="azv"></b></label>
+        <input id="az" type="range" min="0" max="359.5" step="0.5" value="67.5">
+        <div class="chips" id="azchips"></div>
+      </div>
+      <div class="ctl">
+        <label for="el">Ήλιος, ύψος <b id="elv"></b></label>
+        <input id="el" type="range" min="2" max="88" step="0.5" value="10">
+      </div>
+      <div class="ctl">
+        <label for="face">Το φύλλο κοιτάζει προς <b id="facev"></b></label>
+        <input id="face" type="range" min="0" max="359.5" step="0.5" value="106">
+      </div>
+      <div class="ctl">
+        <label for="shape">Σχήμα χαρτιού</label>
+        <select id="shape">
+          <option value="flat">Επίπεδο</option>
+          <option value="C">Καμπύλο σαν C</option>
+          <option value="S" selected>Σαν S (όπως το γλυπτό)</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="bend">Λύγισμα (γωνία εφαπτομένης) <b id="bendv"></b></label>
+        <input id="bend" type="range" min="0" max="120" step="0.5" value="67.5">
+      </div>
+      <div class="ctl">
+        <label for="target">Πού πέφτει το φως</label>
+        <select id="target">
+          <option value="wall">Τοίχος απέναντι</option>
+          <option value="floor">Πάτωμα</option>
+          <option value="self" selected>Πάνω στο ίδιο το φύλλο</option>
+        </select>
+      </div>
+      <div class="ctl">
+        <label for="dist">Απόσταση τοίχου <b id="distv"></b></label>
+        <input id="dist" type="range" min="20" max="2000" step="10" value="500">
+      </div>
+      <div class="ctl">
+        <label for="height">Ύψος φύλλου από το πάτωμα <b id="heightv"></b></label>
+        <input id="height" type="range" min="0" max="1500" step="10" value="900">
+      </div>
+      <div class="ctl">
+        <label for="content">Περιεχόμενο φύλλου</label>
+        <select id="content">
+          <option value="ct">Μόνο κρυπτοκείμενο (1 Α4)</option>
+          <option value="both" selected>Κρυπτοκείμενο + tableau (2 Α4, όπως το γλυπτό)</option>
+        </select>
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="hk4" checked> Τονισμός K4</label>
+        <label><input type="checkbox" id="hyar" checked> Τονισμός και ακτίνες από YAR</label>
+      </div>
+      <button class="primary" id="scan">Σάρωση ήλιου (όλα τα αζιμούθια και ύψη)</button>
+      <p class="note" id="scanout">Η σάρωση δουλεύει στη λειτουργία «πάνω στο ίδιο το φύλλο» και κρατά την καλύτερη θέση για το K4. Επειδή το φως πάνω στο ίδιο το φύλλο εξαρτάται μόνο από τη γωνία ήλιου ως προς το φύλλο, η σάρωση του αζιμούθιου καλύπτει και κάθε προσανατολισμό του φύλλου.</p>
+    </aside>
+
+    <div style="display:grid;gap:16px;min-width:0">
+      <div class="views">
+        <figure><figcaption>Κάτοψη · βορράς πάνω</figcaption><canvas id="plan" width="600" height="600" role="img" aria-label="Κάτοψη του φύλλου, του ήλιου και των ακτίνων"></canvas></figure>
+        <figure><figcaption id="projcap">Τι βλέπεις</figcaption><canvas id="proj" width="1200" height="700" role="img" aria-label="Η προβολή των διάτρητων γραμμάτων"></canvas></figure>
+      </div>
+      <section class="read" aria-live="polite">
+        <h2>Ανάγνωση</h2>
+        <dl class="kv">
+          <dt class="yar">Φως από Y, A, R</dt><dd id="ryar">—</dd>
+          <dt class="k4">Φως από το K4 πέφτει σε</dt><dd id="rk4">—</dd>
+          <dt>Έλεγχος ως κλειδί</dt><dd id="rscore">—</dd>
+        </dl>
+        <div class="mono" id="rk4full"></div>
+        <p class="note">Για κάθε γράμμα του K4 με γνωστό απλό κείμενο (EASTNORTHEAST, BERLINCLOCK), το γράμμα στο οποίο πέφτει το φως δοκιμάζεται ως κλειδί Vigenère, Beaufort και variant Beaufort, με κανονικό αλφάβητο και με αλφάβητο KRYPTOS. Το νούμερο είναι πόσα από τα γνωστά γράμματα βγαίνουν σωστά στον καλύτερο από τους 6 συνδυασμούς. Τυχαία αναμένεται περίπου 1–2 στα 24. Μια πραγματική λύση θα έδινε σχεδόν 24/24. Τα γράμματα μπαίνουν στη θέση τους όπως στη μεταγραφή γραμμή-γραμμή του γλυπτού. Το χαρτί λυγίζει χωρίς να τεντώνεται.</p>
+      </section>
+    </div>
+  </div>
+</div>
+
+<script>
+const LINES=["EMUFPHZLRFAXYUSDJKZLDKRNSHGNFIVJ","YQTQUXQBQVYUVLLTREVJYQTMKYRDMFD","VFPJUDEEHZWETZYVGWHKKQETGFQJNCE","GGWHKK?DQMCPFQZDQMMIAGPFXHQRLG","TIMVMZJANQLVKQEDAGDVFRPJUNGEUNA","QZGZLECGYUXUEENJTBJLBQCRTBJDFHRR","YIZETKZEMVDUFKSJHKFWHKUWQLSZFTI","HHDDDUVH?DWKBFUFPWNTDFIYCUQZERE","EVLDKFEZMOQQJLTTUGSYQPFEUNLAVIDX","FLGGTEZ?FKZBSFDQVGOGIPUFXHHDRKF","FHQNTGPUAECNUVPDJMQCLQUMUNEDFQ","ELZZVRRGKFFVOEEXBDMVPNFQXEZLGRE","DNQFMPNZGLFLPMRJQYALMGNUVPDXVKP","DQUMEBEDMHDAFMJGZNUPLGEWJLLAETG","ENDYAHROHNLSRHEOCPTEOIBIDYSHNAIA","CHTNREYULDSLLSLLNOHSNOSMRWXMNE","TPRNGATIHNRARPESLNNELEBLPIIACAE","WMTWNDITEENRAHCTENEUDRETNHAEOE","TFOLSEDTIWENHAEIOYTEYQHEENCTAYCR","EIFTBRSPAMHHEWENATAMATEGYEERLB","TEEFOASFIOTUETUAEOTOARMAEERTNRTI","BSEDDNIAAHTTMSTEWPIEROAGRIEWFEB","AECTDDHILCEIHSITEGOEAOSDDRYDLORIT","RKLMLEHAGTDHARDPNEOHMGFMFEUHE","ECDMRIPFEIMEHNLSSTTRTVDOHW?OBKR","UOXOGHULBSOLIFBBWFLRVQQPRNGKSSO","TWTQSJQSSEKZZWATJKLUDIAWINFBNYP","VTTMZFPKWGDKZXTJCDIGKUHUAUEKCAR"];
+const TAB=["ABCDEFGHIJKLMNOPQRSTUVWXYZABCD","AKRYPTOSABCDEFGHIJLMNQUVWXZKRYP","BRYPTOSABCDEFGHIJLMNQUVWXZKRYPT","CYPTOSABCDEFGHIJLMNQUVWXZKRYPTO","DPTOSABCDEFGHIJLMNQUVWXZKRYPTOS","ETOSABCDEFGHIJLMNQUVWXZKRYPTOSA","FOSABCDEFGHIJLMNQUVWXZKRYPTOSAB","GSABCDEFGHIJLMNQUVWXZKRYPTOSABC","HABCDEFGHIJLMNQUVWXZKRYPTOSABCD","IBCDEFGHIJLMNQUVWXZKRYPTOSABCDE","JCDEFGHIJLMNQUVWXZKRYPTOSABCDEF","KDEFGHIJLMNQUVWXZKRYPTOSABCDEFG","LEFGHIJLMNQUVWXZKRYPTOSABCDEFGH","MFGHIJLMNQUVWXZKRYPTOSABCDEFGHI","NGHIJLMNQUVWXZKRYPTOSABCDEFGHIJL","OHIJLMNQUVWXZKRYPTOSABCDEFGHIJL","PIJLMNQUVWXZKRYPTOSABCDEFGHIJLM","QJLMNQUVWXZKRYPTOSABCDEFGHIJLMN","RLMNQUVWXZKRYPTOSABCDEFGHIJLMNQ","SMNQUVWXZKRYPTOSABCDEFGHIJLMNQU","TNQUVWXZKRYPTOSABCDEFGHIJLMNQUV","UQUVWXZKRYPTOSABCDEFGHIJLMNQUVW","VUVWXZKRYPTOSABCDEFGHIJLMNQUVWX","WVWXZKRYPTOSABCDEFGHIJLMNQUVWXZ","XWXZKRYPTOSABCDEFGHIJLMNQUVWXZK","YXZKRYPTOSABCDEFGHIJLMNQUVWXZKR","ZZKRYPTOSABCDEFGHIJLMNQUVWXZKRY","ABCDEFGHIJKLMNOPQRSTUVWXYZABCD"];
+const ST="ABCDEFGHIJKLMNOPQRSTUVWXYZ", KA="KRYPTOSABCDEFGHIJLMNQUVWXZ";
+const CRIB={};"EASTNORTHEAST".split("").forEach((c,j)=>CRIB[21+j]=c);"BERLINCLOCK".split("").forEach((c,j)=>CRIB[63+j]=c);
+const A4W=210,A4H=297,ROWS=28,CWC=A4W/33,CWT=A4W/32,CH=A4H/ROWS;
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const rad=d=>d*Math.PI/180, dir=a=>[Math.sin(rad(a)),Math.cos(rad(a))];
+
+// cells
+function buildCells(both){
+  const cells=[];let k4=0;
+  LINES.forEach((ln,r)=>{for(let c=0;c<ln.length;c++){
+    const ch=ln[c];const isK4=(r===24&&c>=27)||r>24;
+    cells.push({ch,u:c*CWC,v:r*CH,w:CWC,h:CH,grp:"ct",r,c,k4:isK4?k4++:-1,yar:r===14&&(c===3||c===4||c===6)});}});
+  if(both)TAB.forEach((ln,r)=>{for(let c=0;c<ln.length;c++)cells.push({ch:ln[c],u:A4W+c*CWT,v:r*CH,w:CWT,h:CH,grp:"tab",r,c,k4:-1,yar:false});});
+  return cells;
+}
+function charAt(u,v,both){
+  const r=Math.floor(v/CH); if(r<0||r>=ROWS) return null;
+  if(u>=0&&u<A4W){const c=Math.floor(u/CWC);const ch=LINES[r][c];return ch||null;}
+  if(both&&u>=A4W&&u<2*A4W){const c=Math.floor((u-A4W)/CWT);return TAB[r][c]||null;}
+  return null;
+}
+// sheet geometry: tangent angle theta(u) integrated → plan curve, arc length exact
+function buildCurve(W,shape,bend,face,n){
+  const th=u=>{const s=u/W; if(shape==="flat")return 0; if(shape==="C")return rad(bend)*(2*s-1); return rad(bend)*Math.sin(2*Math.PI*s);};
+  const xs=[0],ys=[0],ts=[th(0)],us=[0];const du=W/n;
+  for(let i=1;i<=n;i++){const u=i*du,ta=th(u-du),tb=th(u),tm=th(u-du/2);
+    xs.push(xs[i-1]+du*Math.cos(tm));ys.push(ys[i-1]+du*Math.sin(tm));ts.push(tb);us.push(u);}
+  const ex=xs[n],ey=ys[n],ang=Math.atan2(ey,ex),ca=Math.cos(-ang),sa=Math.sin(-ang),mx=ex/2,my=ey/2;
+  const c=dir(face-90),nh=dir(face);const E=[],N=[],TE=[],TN=[];
+  for(let i=0;i<=n;i++){const x=xs[i]-mx,y=ys[i]-my;const a=x*ca-y*sa,b=x*sa+y*ca;
+    E.push(a*c[0]+b*nh[0]);N.push(a*c[1]+b*nh[1]);
+    const t=ts[i]-ang;const ta=Math.cos(t),tb=Math.sin(t);TE.push(ta*c[0]+tb*nh[0]);TN.push(ta*c[1]+tb*nh[1]);}
+  let maxb=0;for(let i=0;i<=n;i++){maxb=Math.max(maxb,Math.abs(E[i]*nh[0]+N[i]*nh[1]));}
+  return {E,N,TE,TN,us,n,du,W,c,nh,maxb};
+}
+function at(C,u){let f=u/C.du;if(f<0)f=0;if(f>C.n)f=C.n;const i=Math.min(C.n-1,Math.floor(f)),t=f-i;
+  return [C.E[i]+(C.E[i+1]-C.E[i])*t,C.N[i]+(C.N[i+1]-C.N[i])*t];}
+function P3(C,u,v,base){const p=at(C,u);return [p[0],p[1],base+A4H-v];}
+// ray (plan) vs curve: first crossing with t>eps
+function hitCurve(C,p,d,uSelf){
+  let best=null;const dx=d[0],dy=d[1];
+  for(let i=0;i<C.n;i++){
+    const ax=C.E[i],ay=C.N[i],bx=C.E[i+1],by=C.N[i+1];
+    const ex=bx-ax,ey=by-ay;const den=dx*ey-dy*ex;if(Math.abs(den)<1e-12)continue;
+    const qx=ax-p[0],qy=ay-p[1];const t=(qx*ey-qy*ex)/den,s=(qx*dy-qy*dx)/den;
+    if(s<0||s>1||t<=1e-6)continue;
+    const u=C.us[i]+s*C.du; if(Math.abs(u-uSelf)<0.8)continue;
+    if(!best||t<best.t)best={t,u,i,s};
+  }
+  return best;
+}
+function sunVec(az,el){const ce=Math.cos(rad(el));return [Math.sin(rad(az))*ce,Math.cos(rad(az))*ce,Math.sin(rad(el))];}
+
+// projection of a sheet point to target 2D coords
+function projector(S,C){
+  const d=[-S.sv[0],-S.sv[1],-S.sv[2]];
+  if(S.target==="floor") return p=>{if(d[2]>=-1e-9)return null;const t=-p[2]/d[2];return [p[0]+t*d[0],p[1]+t*d[1]];};
+  if(S.target==="wall"){
+    const dn=d[0]*C.nh[0]+d[1]*C.nh[1];if(Math.abs(dn)<1e-6)return ()=>null;
+    const sg=Math.sign(dn),off=sg*(C.maxb+S.dist);
+    return p=>{const pn=p[0]*C.nh[0]+p[1]*C.nh[1];const t=(off-pn)/dn;if(t<=0)return null;
+      const q=[p[0]+t*d[0],p[1]+t*d[1],p[2]+t*d[2]];if(q[2]<0)return null;
+      const h=(q[0]*C.c[0]+q[1]*C.c[1])*(sg>0?-1:1);return [h,q[2]];};
+  }
+  return p=>p; // unused
+}
+// self landing: from sheet point (u,v) along d → (u',v', face)
+function selfLand(S,C,u,v){
+  const d=[-S.sv[0],-S.sv[1],-S.sv[2]];const p=P3(C,u,v,S.base);
+  const dl=Math.hypot(d[0],d[1]);if(dl<1e-9)return null;
+  const h=hitCurve(C,p,[d[0],d[1]],u);if(!h)return null;
+  const z=p[2]+h.t*d[2];const v2=S.base+A4H-z;if(v2<0||v2>A4H)return null;
+  // front-face test with local normal: rotate tangent by +90° within plan (counter-clockwise in a-b frame = toward +b)
+  const i=h.i;const tE=C.TE[i],tN=C.TN[i];
+  const crossSign=(C.c[0]*C.nh[1]-C.c[1]*C.nh[0]);
+  const nl=crossSign>0?[-tN,tE]:[tN,-tE];
+  const front=(d[0]*nl[0]+d[1]*nl[1])<0;
+  return {u:h.u,v:v2,front};
+}
+
+function state(){return{az:+$("az").value,el:+$("el").value,face:+$("face").value,shape:$("shape").value,bend:+$("bend").value,
+  target:$("target").value,dist:+$("dist").value,base:+$("height").value,both:$("content").value==="both",hk4:$("hk4").checked,hyar:$("hyar").checked};}
+
+const plan=$("plan"),proj=$("proj"),pc=plan.getContext("2d"),jc=proj.getContext("2d");
+function fit(boxes,W,H,m,flipY){let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;
+  for(const [x,y] of boxes){if(!isFinite(x)||!isFinite(y))continue;x0=Math.min(x0,x);x1=Math.max(x1,x);y0=Math.min(y0,y);y1=Math.max(y1,y);}
+  if(x1<=x0||y1<=y0)return null;const s=Math.min((W-2*m)/(x1-x0),(H-2*m)/(y1-y0));
+  const ox=(W-s*(x1-x0))/2,oy=(H-s*(y1-y0))/2;
+  return flipY?p=>[ox+(p[0]-x0)*s,H-(oy+(p[1]-y0)*s)]:p=>[ox+(p[0]-x0)*s,oy+(p[1]-y0)*s];}
+function glyph(ctx,S0,S1,S2,ch,col){
+  const a=(S1[0]-S0[0])/100,b=(S1[1]-S0[1])/100,c=(S2[0]-S0[0])/100,d=(S2[1]-S0[1])/100;
+  const det=a*d-b*c;if(!isFinite(det)||Math.abs(det)<1e-5||Math.abs(det)>40)return;
+  ctx.setTransform(a,b,c,d,S0[0],S0[1]);ctx.fillStyle=col;ctx.fillText(ch,50,52);ctx.setTransform(1,0,0,1,0,0);}
+
+function render(){
+  const S=state();S.sv=sunVec(S.az,S.el);
+  $("azv").textContent=S.az.toFixed(1)+"°";$("elv").textContent=S.el.toFixed(1)+"°";$("facev").textContent=S.face.toFixed(1)+"°";
+  $("bendv").textContent=S.bend.toFixed(1)+"°";$("distv").textContent=S.dist+" mm";$("heightv").textContent=S.base+" mm";
+  const W=S.both?2*A4W:A4W;const C=buildCurve(W,S.shape,S.bend,S.face,S.both?480:300);
+  const cells=buildCells(S.both);
+  const COL={sun:css("--sun"),sh:css("--shadow"),k4:css("--verd"),yar:css("--copper"),fg:css("--fg"),mut:css("--muted"),line:css("--line"),sheet:css("--sheet"),panel:css("--panel")};
+  const d=[-S.sv[0],-S.sv[1],-S.sv[2]];
+  // ---- readout via self landing (always computed for YAR/K4)
+  const k4land=new Array(97).fill(null),yarl=[];
+  for(const cl of cells){ if(cl.k4<0&&!cl.yar)continue;
+    const L=selfLand(S,C,cl.u+cl.w/2,cl.v+cl.h/2);const ch=L?charAt(L.u,L.v,S.both):null;
+    if(cl.k4>=0)k4land[cl.k4]=ch&&ch!=="?"?ch:null; if(cl.yar)yarl.push(cl.ch+"→"+(ch||"·")); }
+  $("ryar").textContent=yarl.join("  ")+"  (πάνω στο φύλλο)";
+  const n=k4land.filter(Boolean).length;$("rk4").textContent=n+" από 97 ακτίνες πέφτουν πάνω στο φύλλο";
+  const ct="OBKRUOXOGHULBSOLIFBBWFLRVQQPRNGKSSOTWTQSJQSSEKZZWATJKLUDIAWINFBNYPVTTMZFPKWGDKZXTJCDIGKUHUAUEKCAR";
+  $("rk4full").textContent="K4  "+ct+"\nφως "+k4land.map(x=>x||"·").join("");
+  const sc=score(k4land,ct);
+  $("rscore").innerHTML=sc.n?`<span class="pill ${sc.best>=10?'hit':''}">${sc.best}/${sc.n}</span> σωστά (${sc.lab})`:"καμία ακτίνα από τα γνωστά γράμματα δεν πέφτει πάνω στο φύλλο";
+  // ---- plan view
+  pc.setTransform(1,0,0,1,0,0);pc.fillStyle=COL.panel;pc.fillRect(0,0,plan.width,plan.height);
+  const pts=[];for(let i=0;i<=C.n;i++)pts.push([C.E[i],C.N[i]]);
+  const R=Math.max(C.W/2,C.maxb)*1.25+(S.target==="wall"?S.dist:0);
+  const tf=fit([[-R,-R],[R,R]],plan.width,plan.height,30,true);
+  // grid circle + north
+  pc.strokeStyle=COL.line;pc.lineWidth=1;const o=tf([0,0]);const rr=tf([R*0.92,0])[0]-o[0];
+  pc.beginPath();pc.arc(o[0],o[1],rr,0,2*Math.PI);pc.stroke();
+  pc.fillStyle=COL.mut;pc.font="600 18px "+css("--f-body");pc.textAlign="center";pc.fillText("Β",o[0],o[1]-rr-8);
+  pc.font="13px "+css("--f-mono");[["Α",90],["Ν",180],["Δ",270]].forEach(([t,a])=>{const q=dir(a);pc.fillText(t,o[0]+q[0]*(rr+14),o[1]-q[1]*(rr+14)+5);});
+  // sun
+  const sd=dir(S.az);const sp=[o[0]+sd[0]*rr,o[1]-sd[1]*rr];pc.fillStyle=COL.yar;pc.beginPath();pc.arc(sp[0],sp[1],10,0,2*Math.PI);pc.fill();
+  pc.fillStyle=COL.mut;pc.fillText("ήλιος "+S.az.toFixed(1)+"°",sp[0],sp[1]+26);
+  // wall
+  if(S.target==="wall"){const dn=d[0]*C.nh[0]+d[1]*C.nh[1];if(Math.abs(dn)>1e-6){const sg=Math.sign(dn),off=sg*(C.maxb+S.dist);
+    const a1=[C.c[0]*-R+C.nh[0]*off,C.c[1]*-R+C.nh[1]*off],a2=[C.c[0]*R+C.nh[0]*off,C.c[1]*R+C.nh[1]*off];
+    pc.strokeStyle=COL.mut;pc.setLineDash([6,5]);pc.beginPath();pc.moveTo(...tf(a1));pc.lineTo(...tf(a2));pc.stroke();pc.setLineDash([]);}}
+  // sheet
+  pc.strokeStyle=COL.fg;pc.lineWidth=4;pc.beginPath();pts.forEach((p,i)=>{const q=tf(p);i?pc.lineTo(q[0],q[1]):pc.moveTo(q[0],q[1]);});pc.stroke();
+  if(S.both){const m=tf(at(C,A4W));pc.fillStyle=COL.fg;pc.beginPath();pc.arc(m[0],m[1],4,0,7);pc.fill();}
+  // front ticks
+  pc.strokeStyle=COL.sheet;pc.lineWidth=1.5;for(let i=10;i<C.n;i+=24){const p=tf([C.E[i],C.N[i]]);const crossSign=(C.c[0]*C.nh[1]-C.c[1]*C.nh[0]);
+    const nl=crossSign>0?[-C.TN[i],C.TE[i]]:[C.TN[i],-C.TE[i]];const q=tf([C.E[i]+nl[0]*C.W*0.03,C.N[i]+nl[1]*C.W*0.03]);pc.beginPath();pc.moveTo(...p);pc.lineTo(...q);pc.stroke();}
+  // start-of-text marker
+  const st=tf([C.E[0],C.N[0]]);pc.fillStyle=COL.mut;pc.font="12px "+css("--f-body");pc.fillText("αρχή κειμένου",st[0],st[1]-10);
+  // YAR rays
+  if(S.hyar){for(const cl of cells){if(!cl.yar)continue;const p=P3(C,cl.u+cl.w/2,cl.v+cl.h/2,S.base);
+    let len=R*2;if(S.target==="self"){const h=hitCurve(C,p,[d[0],d[1]],cl.u+cl.w/2);if(h)len=h.t*Math.hypot(d[0],d[1]);}
+    const dl=Math.hypot(d[0],d[1])||1;const q=[p[0]+d[0]/dl*len,p[1]+d[1]/dl*len];
+    pc.strokeStyle=COL.yar;pc.lineWidth=1.5;pc.beginPath();pc.moveTo(...tf(p));pc.lineTo(...tf(q));pc.stroke();}}
+  // ---- projection view
+  jc.setTransform(1,0,0,1,0,0);
+  const PW=proj.width,PH=proj.height;
+  jc.font="100px "+css("--f-display");jc.textAlign="center";jc.textBaseline="middle";
+  if(S.target==="self"){
+    $("projcap").textContent="Πάνω στο ίδιο το φύλλο · ξετυλιγμένο, από μπροστά";
+    jc.fillStyle=COL.sh;jc.fillRect(0,0,PW,PH);
+    const tf2=fit([[0,0],[W,A4H]],PW,PH,16,false);
+    const s0=tf2([0,0]),s1=tf2([W,A4H]);jc.fillStyle="#2f3436";jc.fillRect(s0[0],s0[1],s1[0]-s0[0],s1[1]-s0[1]);
+    for(const cl of cells){const a=tf2([cl.u,cl.v]),b=tf2([cl.u+cl.w,cl.v]),c=tf2([cl.u,cl.v+cl.h]);glyph(jc,a,b,c,cl.ch,"rgba(255,255,255,.14)");}
+    for(const cl of cells){
+      const L0=selfLand(S,C,cl.u,cl.v),L1=selfLand(S,C,cl.u+cl.w,cl.v),L2=selfLand(S,C,cl.u,cl.v+cl.h);
+      if(!L0||!L1||!L2)continue;
+      if(Math.abs(L0.u-L1.u)>cl.w*8||Math.abs(L0.v-L2.v)>cl.h*8)continue;
+      let col=L0.front?COL.sun:"rgba(247,232,196,.55)";
+      if(S.hk4&&cl.k4>=0)col=COL.k4; if(S.hyar&&cl.yar)col=COL.yar;
+      glyph(jc,tf2([L0.u,L0.v]),tf2([L1.u,L1.v]),tf2([L2.u,L2.v]),cl.ch,col);
+    }
+    if(S.both){const m0=tf2([A4W,0]),m1=tf2([A4W,A4H]);jc.strokeStyle="rgba(255,255,255,.25)";jc.setLineDash([4,6]);jc.beginPath();jc.moveTo(...m0);jc.lineTo(...m1);jc.stroke();jc.setLineDash([]);}
+  } else {
+    $("projcap").textContent=S.target==="wall"?"Στον τοίχο · όπως τον κοιτάς":"Στο πάτωμα · από πάνω, βορράς πάνω";
+    const pj=projector(S,C);
+    const outline=[];for(let i=0;i<=C.n;i+=2)outline.push(pj(P3(C,C.us[i],0,S.base)));for(let i=C.n;i>=0;i-=2)outline.push(pj(P3(C,C.us[i],A4H,S.base)));
+    const ok=outline.filter(Boolean);
+    jc.fillStyle=COL.sun;jc.fillRect(0,0,PW,PH);
+    if(ok.length<6){jc.fillStyle=COL.sh;jc.font="28px "+css("--f-body");jc.fillText("Το φως δεν φτάνει σε αυτή την επιφάνεια με αυτές τις ρυθμίσεις",PW/2,PH/2);return;}
+    const tf3=fit(ok,PW,PH,24,true);
+    jc.fillStyle=COL.sh;jc.beginPath();ok.forEach((p,i)=>{const q=tf3(p);i?jc.lineTo(q[0],q[1]):jc.moveTo(q[0],q[1]);});jc.closePath();jc.fill();
+    jc.font="100px "+css("--f-display");
+    for(const cl of cells){const a=pj(P3(C,cl.u,cl.v,S.base)),b=pj(P3(C,cl.u+cl.w,cl.v,S.base)),c=pj(P3(C,cl.u,cl.v+cl.h,S.base));
+      if(!a||!b||!c)continue;let col=COL.sun;if(S.hk4&&cl.k4>=0)col=COL.k4;if(S.hyar&&cl.yar)col=COL.yar;
+      glyph(jc,tf3(a),tf3(b),tf3(c),cl.ch,col);}
+  }
+}
+function score(land,ct){let best=0,lab="",n=0;
+  for(const [A,an] of [[ST,"κανονικό"],[KA,"KRYPTOS"]])for(const m of ["Vigenère","Beaufort","var. Beaufort"]){let h=0;n=0;
+    for(const i in CRIB){const k=land[i];if(!k)continue;n++;const c=A.indexOf(ct[i]),kk=A.indexOf(k);
+      const v=m==="Vigenère"?(c-kk+26)%26:m==="Beaufort"?(kk-c+26)%26:(c+kk)%26;if(A[v]===CRIB[i])h++;}
+    if(h>best||!lab){best=h;lab=m+", "+an;}}
+  return {best,n,lab};}
+
+// sun sweep (self mode)
+$("scan").addEventListener("click",()=>{
+  const S0=state();if(S0.target!=="self"){$("target").value="self";}
+  const out=$("scanout");out.textContent="Σαρώνω…";
+  setTimeout(()=>{const S=state();const W=S.both?2*A4W:A4W;const C=buildCurve(W,S.shape,S.bend,S.face,200);
+    const cells=buildCells(S.both).filter(c=>c.k4>=0&&CRIB[c.k4]);const ct="OBKRUOXOGHULBSOLIFBBWFLRVQQPRNGKSSOTWTQSJQSSEKZZWATJKLUDIAWINFBNYPVTTMZFPKWGDKZXTJCDIGKUHUAUEKCAR";
+    let best={b:-1},tried=0;
+    for(let az=0;az<360;az+=1)for(let el=4;el<=86;el+=3){const SS={...S,az,el,sv:sunVec(az,el)};const land=new Array(97).fill(null);
+      for(const cl of cells){const L=selfLand(SS,C,cl.u+cl.w/2,cl.v+cl.h/2);if(L){const ch=charAt(L.u,L.v,S.both);if(ch&&ch!=="?")land[cl.k4]=ch;}}
+      const sc=score(land,ct);tried++;if(sc.n>=12&&sc.best>best.b)best={b:sc.best,n:sc.n,az,el,lab:sc.lab};}
+    if(best.b<0){out.textContent="Με αυτό το σχήμα, καμία θέση του ήλιου δεν ρίχνει αρκετό φως από το K4 πάνω στο φύλλο.";return;}
+    $("az").value=best.az;$("el").value=best.el;render();
+    out.innerHTML=`Δοκιμάστηκαν ${tried.toLocaleString("el-GR")} θέσεις ήλιου. Καλύτερη: αζιμούθιο ${best.az}°, ύψος ${best.el}°, <b>${best.b}/${best.n}</b> (${best.lab}). Από καθαρή τύχη, το καλύτερο σε χιλιάδες θέσεις βγαίνει συνήθως 3–6. Μόνο κάτι κοντά στο ${best.n}/${best.n} θα σήμαινε λύση.`;
+  },30);
+});
+[["ΑΒΑ 67.5°",67.5],["Α 90°",90],["ΒΑ 45°",45],["ΔΝΔ 247.5°",247.5]].forEach(([t,v])=>{const b=document.createElement("button");b.type="button";b.textContent=t;b.onclick=()=>{$("az").value=v;render();};$("azchips").appendChild(b);});
+document.querySelectorAll("input,select").forEach(e=>e.addEventListener("input",render));
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",render);
+(document.fonts?document.fonts.load("100px 'Allerta Stencil'"):Promise.resolve()).finally(render);
+render();
+</script>
